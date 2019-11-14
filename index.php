@@ -1,7 +1,6 @@
 <?php
 require 'vendor/autoload.php';
-require 'src/CrawlLogger.php';
-require 'src/CrawlLoggerCLI.php';
+require 'config/db.php';
 
 use Spatie\Crawler\Crawler;
 use GuzzleHttp\RequestOptions;

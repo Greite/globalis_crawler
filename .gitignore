@@ -4,6 +4,7 @@ composer.lock
 .htaccess
 
 /vendor/*
+/config/db.php
 
 ### Windows ###
 # Windows image file caches
