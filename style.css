@@ -1,0 +1,61 @@
+html {
+    font-size: 10px !important;
+    margin: 0;
+    padding: 0;
+    background-color: lightgray;
+}
+
+body {
+    position: relative;
+    max-width: 1000px;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+}
+
+h1 {
+    text-align: center;
+}
+
+p,
+ul,
+li,
+error,
+comment {
+    font-size: 1.6rem;
+}
+
+form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 0;
+    transform: translate(-50%);
+}
+
+input[type="text"] {
+    appearance: none;
+    padding: 5px 10px;
+    border: 1px solid black;
+}
+
+input[type="submit"] {
+    appearance: none;
+    padding: 5px 10px;
+    border: 1px solid black;
+    color: white;
+    background-color: black;
+}
+
+input[type="submit"]:hover {
+    cursor: pointer;
+}
+
+error {
+    color: red;
+}
+
+comment {
+    color: orange;
+}

@@ -1,0 +1,12 @@
+{
+    "require": {
+        "php": ">=7.3",
+        "spatie/http-status-check": "^3.1"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "src\\" : "GlobalisCrawler"
+        }
+    }
+}
