@@ -40,7 +40,7 @@ use GlobalisCrawler\CrawlLogger;
                                     </label>
                                 </div>
                                 <div class="input-group mb-3">
-                                    <input type="text" class="form-control" name="crawled_site" placeholder="http://globalis.local" aria-label="http://globalis.local" aria-describedby="submit_crawl">
+                                    <input type="text" class="form-control" name="crawled_site" placeholder="https://example.com/" aria-label="https://example.com/" aria-describedby="submit_crawl">
                                     <div class="input-group-append">
                                         <input class="btn btn-outline-secondary" type="submit" id="submit_crawl" value="Crawl">
                                     </div>
