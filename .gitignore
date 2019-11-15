@@ -5,6 +5,7 @@ composer.lock
 
 /vendor/*
 /config/db.php
+/config/env.php
 
 ### Windows ###
 # Windows image file caches

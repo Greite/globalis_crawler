@@ -15,23 +15,18 @@ class CrawlLogger extends CrawlObserver
      */
     protected $crawledUrls = [];
 
-    /**
-     * @var string|null
+     /**
+     * @var string
      */
-    protected $outputFile = null;
-
-    /**
-     * @var bool
-     */
-    protected $displaySuccess = false;
+    protected $crawlId = '';
 
     public function __construct()
     {
     }
 
-    public function setDisplaySuccess(bool $displaySuccess)
+    public function setCrawlId(string $crawlId)
     {
-        $this->displaySuccess = $displaySuccess;
+        $this->crawlId = $crawlId;
     }
 
     /**
@@ -48,30 +43,27 @@ class CrawlLogger extends CrawlObserver
      */
     public function finishedCrawling()
     {
-        echo '<p>Crawling summary</p>';
-        echo '<p>----------------</p>';
-        ksort($this->crawledUrls);
-        foreach ($this->crawledUrls as $statusCode => $urls) {
-            $colorTag = $this->getColorTagForStatusCode($statusCode);
-            $count = count($urls);
-            if (is_numeric($statusCode)) {
-                echo "<p>Crawled {$count} url(s) with statuscode <span class=\"{$colorTag}\">{$statusCode}</span></p>";
-            }
-            if ($statusCode == static::UNRESPONSIVE_HOST) {
-                echo "<p class=\"{$colorTag}\">{$count} url(s) did have unresponsive host(s)</p>";
-            }
-        }
-    }
+        global $db;
 
-    protected function getColorTagForStatusCode(string $code): string
-    {
-        if ($this->startsWith($code, '2')) {
-            return 'text-success';
-        }
-        if ($this->startsWith($code, '3')) {
-            return 'text-warning';
-        }
-        return 'text-danger';
+        // $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, crawled_at) VALUES ";
+
+        // ksort($this->crawledUrls);
+        // foreach ($this->crawledUrls as $urls) {
+        //     foreach ($urls as $url) {
+        //         $sql .= '(' . $this->crawlId . ',';
+        //         $sql .= implode(",", $url);
+        //         $sql .= '), ';
+        //     }
+        // }
+        // $sql = trim($sql);
+        // $sql = trim($sql, ',');
+        // $sql = $db->prepare($sql);
+        // $sql->execute();
+
+        $sql = $db->prepare("UPDATE crawls SET status = 'completed', url_count = :count WHERE crawls.id = :id;");
+        $sql->bindParam(':id', $_POST['id']);
+
+        $sql->execute();
     }
 
     /**
@@ -90,39 +82,33 @@ class CrawlLogger extends CrawlObserver
         return false;
     }
 
-    /**
-     * Set the filename to write the output log.
-     *
-     * @param string $filename
-     */
-    public function setOutputFile($filename)
-    {
-        $this->outputFile = $filename;
-    }
-
     public function crawled(
         UriInterface $url,
         ResponseInterface $response,
         ?UriInterface $foundOnUrl = null
     ) {
+        global $db;
+
         $statusCode = $response->getStatusCode();
-
-        if ($statusCode === 200 && !$this->displaySuccess) {
-            return;
-        }
-
         $reason = $response->getReasonPhrase();
-        $colorTag = $this->getColorTagForStatusCode((string)$statusCode);
         $timestamp = date('Y-m-d H:i:s');
-        $message = "<span class=\"{$colorTag}\">{$statusCode} {$reason}</span> - " . (string) $url;
-        if ($foundOnUrl) {
-            $message .= "<br><br><b>Found on :</b> <ul><li><a href=\"{$foundOnUrl}\" target=\"_blank\">{$foundOnUrl}</a></li></ul>";
-        }
-        if ($this->outputFile && $colorTag === 'error') {
-            file_put_contents($this->outputFile, $message . '<br>', FILE_APPEND);
-        }
-        echo "<p>[{$timestamp}] {$message}</p><hr>";
-        $this->crawledUrls[$statusCode][] = $url;
+
+        $data = [
+            'status_code' => $statusCode,
+            'reason' => '"' . $reason . '"',
+            'url' => '"' . (string)$url . '"',
+            'found_on' => (string)$foundOnUrl ? '"' . (string)$foundOnUrl . '"' : 'null',
+            'crawled_at' => '"' . $timestamp . '"',
+        ];
+
+        $this->crawledUrls[$statusCode][] = $data;
+
+        $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, crawled_at) VALUES ";
+        $sql .= '(' . $this->crawlId . ',';
+        $sql .= implode(",", $data);
+        $sql .= ')';
+        $sql = $db->prepare($sql);
+        $sql->execute();
     }
 
     public function crawlFailed(
@@ -130,22 +116,31 @@ class CrawlLogger extends CrawlObserver
         RequestException $requestException,
         ?UriInterface $foundOnUrl = null
     ) {
+        global $db;
+
         $statusCode = $requestException->getResponse()
             ? (string)$requestException->getResponse()->getStatusCode()
             : self::UNRESPONSIVE_HOST;
         $reason = $requestException->getResponse()
             ? $requestException->getResponse()->getReasonPhrase()
             : $requestException->getMessage();
-        $colorTag = $this->getColorTagForStatusCode($statusCode);
         $timestamp = date('Y-m-d H:i:s');
-        $message = "<span class=\"{$colorTag}\">{$statusCode} {$reason}</span> - " . (string) $url;
-        if ($foundOnUrl) {
-            $message .= "<br><br><b>Found on :</b> <ul><li><a href=\"{$foundOnUrl}\" target=\"_blank\">{$foundOnUrl}</a></li></ul>";
-        }
-        if ($this->outputFile) {
-            file_put_contents($this->outputFile, $message . '<br>', FILE_APPEND);
-        }
-        echo "<p>[{$timestamp}] {$message}</p><hr>";
-        $this->crawledUrls[$statusCode][] = $url;
+
+        $data = [
+            'status_code' => $statusCode,
+            'reason' => '"' . $reason . '"',
+            'url' => '"' . (string)$url . '"',
+            'found_on' => (string)$foundOnUrl ? '"' . (string)$foundOnUrl . '"' : 'null',
+            'crawled_at' => '"' . $timestamp . '"',
+        ];
+
+        $this->crawledUrls[$statusCode][] = $data;
+
+        $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, crawled_at) VALUES ";
+        $sql .= '(' . $this->crawlId . ',';
+        $sql .= implode(",", $data);
+        $sql .= ')';
+        $sql = $db->prepare($sql);
+        $sql->execute();
     }
 }
