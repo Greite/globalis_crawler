@@ -12,11 +12,40 @@ $sql->bindParam(':id', $_GET['id']);
 $sql->execute();
 $crawl = $sql->fetch(PDO::FETCH_ASSOC);
 
-$sql = $db->prepare("SELECT status_code, reason, url, found_on, crawled_at FROM crawl_logs WHERE crawl_id=:id");
+$filters = '';
+
+foreach ($_GET as $key => $value) {
+    if (strpos($key, 'status_') === false) {
+        continue;
+    }
+
+    if ($filters === '') {
+        $filters .= ' AND (status_code = ' . $value;
+    } else {
+        $filters .= ' OR status_code = ' . $value;
+    }
+}
+if ($filters !== '') {
+    $filters .= ')';
+}
+
+$orderby = '';
+
+if (isset($_GET['orderby']) && isset($_GET['order'])) {
+    $orderby = ' ORDER BY ' . $_GET['orderby'] . ' ' . $_GET['order'];
+}
+
+$sql = $db->prepare("SELECT status_code, reason, url, found_on, crawled_at FROM crawl_logs WHERE crawl_id=:id" . $filters . $orderby);
 $sql->bindParam(':id', $_GET['id']);
 
 $sql->execute();
 $datas = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+$sql = $db->prepare("SELECT count(*) as nb, status_code FROM crawl_logs WHERE crawl_id=:id GROUP BY status_code");
+$sql->bindParam(':id', $_GET['id']);
+
+$sql->execute();
+$status_codes = $sql->fetchAll(PDO::FETCH_ASSOC);
 
 function getStatusColor($code)
 {
@@ -50,28 +79,69 @@ function getStatusColor($code)
         <a href="<?= WEB_HOME ?>/list_crawl.php" class="btn btn-secondary">List crawls</a>
     </div>
     <br>
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Status code</th>
-                <th scope="col">Reason</th>
-                <th scope="col">Url</th>
-                <th scope="col">Found on</th>
-                <th scope="col">Crawled at</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($datas as $data) : ?>
-                <tr>
-                    <th scope="row" class="<?= getStatusColor($data['status_code']) ?>"><?= $data['status_code'] ?></th>
-                    <td><?= $data['reason'] ?></td>
-                    <td><a href="<?= $data['url'] ?>" target="_blank"><?= $data['url'] ?></a></td>
-                    <td><a href="<?= $data['found_on'] ?>" target="_blank"><?= $data['found_on'] ?></a></td>
-                    <td><?= $data['crawled_at'] ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+    <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+        <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
+        <?php if (isset($_GET['orderby'])) : ?>
+            <input type="hidden" name="orderby" value="<?= $_GET['orderby'] ?>" />
+        <?php endif; ?>
+        <?php if (isset($_GET['order'])) : ?>
+            <input type="hidden" name="order" value="<?= $_GET['order'] ?>" />
+        <?php endif; ?>
+        <?php foreach ($status_codes as $status_code) : ?>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" id="status<?= $status_code['status_code'] ?>" name="status_<?= $status_code['status_code'] ?>" value="<?= $status_code['status_code'] ?>"<?= isset($_GET['status_' . $status_code['status_code']]) ? ' checked' : null ?>>
+                <label class="form-check-label <?= getStatusColor($status_code['status_code']) ?>" for="status<?= $status_code['status_code'] ?>"><b><?= $status_code['status_code'] . ' (' . $status_code['nb'] . ')' ?></b></label>
+            </div>
+        <?php endforeach; ?>
+        <input type="submit" class="btn btn-success" value="Apply filter">
+    </form>
+    <br>
 </div>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">
+                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                    <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
+                    <?php foreach ($_GET as $key => $value) : ?>
+                        <?php if (strpos($key, 'status_') === false) {
+                            continue;
+                        }?>
+                        <input type="hidden" name="<?= $key ?>" value="<?= $value ?>"/>
+                    <?php endforeach; ?>
+                    <input type="hidden" name="orderby" value="status_code"/>
+                    <input type="hidden" name="order" value="<?= isset($_GET['order']) && $_GET['order'] === 'DESC' ? 'ASC' : 'DESC' ?>"/>
+                    <button type="submit" class="btn btn-link font-weight-bold">Status code <i class="fas fa-sort<?= isset($_GET['order']) && isset($_GET['orderby']) && $_GET['orderby'] === 'status_code' ? $_GET['order'] === 'ASC' ? '-up' : '-down' : null ?>"></i></button>
+                </form>
+            </th>
+            <th scope="col"><span class="btn font-weight-bold">Reason</span></th>
+            <th scope="col"><span class="btn font-weight-bold">Url</span></th>
+            <th scope="col">
+                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                    <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
+                    <?php foreach ($_GET as $key => $value) : ?>
+                        <?php if (strpos($key, 'status_') === false) {
+                            continue;
+                        }?>
+                        <input type="hidden" name="<?= $key ?>" value="<?= $value ?>"/>
+                    <?php endforeach; ?>
+                    <input type="hidden" name="orderby" value="found_on"/>
+                    <input type="hidden" name="order" value="<?= isset($_GET['order']) && $_GET['order'] === 'DESC' ? 'ASC' : 'DESC' ?>"/>
+                    <button type="submit" class="btn btn-link font-weight-bold">Found on <i class="fas fa-sort<?= isset($_GET['order']) && isset($_GET['orderby']) && $_GET['orderby'] === 'found_on' ? $_GET['order'] === 'ASC' ? '-up' : '-down' : null ?>"></i></button>
+                </form>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($datas as $data) : ?>
+            <tr>
+                <th scope="row" class="<?= getStatusColor($data['status_code']) ?>"><?= $data['status_code'] ?></th>
+                <td><?= $data['reason'] ?></td>
+                <td><a href="<?= $data['url'] ?>" target="_blank"><?= $data['url'] ?></a></td>
+                <td><a href="<?= $data['found_on'] ?>" target="_blank"><?= $data['found_on'] ?></a></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
 
 <?php include 'end_html.php' ?>
