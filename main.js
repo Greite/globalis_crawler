@@ -1,25 +1,26 @@
 ;(function($) {
 
     $(document).ready(function () {
-        $('#submit_crawl').click(function () {
-            let loader = $('#crawl_loader');
-            let crawl_url = $('#crawled_site').val();
+        if ($('#result').length !== 0) {
+            if ($('#result_status').data('status') !== 'completed') {
+                setTimeout(function () {
+                    location.reload();
+                }, 2000);
+            }
+        }
 
-            loader.show();
+        $('#submit_crawl').click(function () {
+            let crawl_url = $('#crawled_site').val();
 
             if (crawl_url === '') {
                 alert('Veuillez saisir une url');
-                loader.hide();
                 return;
             }
 
             $.post('create_crawl.php', { crawled_site: crawl_url})
             .done(function (data) {
                 $.post('crawl.php', {id: data.id})
-                .done(function () {
-                    loader.hide();
-                    window.location.href = "./result.php/?id=" + data.id;
-                });
+                window.location.href = "./result.php/?id=" + data.id;
             });
         });
     });

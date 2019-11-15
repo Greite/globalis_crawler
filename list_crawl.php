@@ -1,16 +1,11 @@
 <?php
-require 'vendor/autoload.php';
-require 'config/db.php';
-require 'config/env.php';
+include 'start_html.php';
 
 $sql = $db->prepare("SELECT * FROM crawls ORDER BY created_at DESC");
 
 $sql->execute();
 $datas = $sql->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
-<?php include 'start_html.php' ?>
-
 <div class="container">
     <h1>Sites crawled : </h1>
     <div class="text-right">

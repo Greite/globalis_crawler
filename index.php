@@ -1,7 +1,3 @@
-<?php
-require 'config/env.php';
-?>
-
 <?php include 'start_html.php' ?>
 
 <div class="container h-100">
@@ -18,11 +14,6 @@ require 'config/env.php';
                     </div>
                     <div>
                         <a href="<?= WEB_HOME ?>/list_crawl.php" class="btn btn-secondary">List crawls</a>
-                    </div>
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border" role="status" id="crawl_loader" style="display:none;">
-                            <span class="sr-only">Loading...</span>
-                        </div>
                     </div>
                 </div>
             </div>

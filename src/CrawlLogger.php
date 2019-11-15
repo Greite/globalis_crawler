@@ -45,23 +45,14 @@ class CrawlLogger extends CrawlObserver
     {
         global $db;
 
-        // $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, crawled_at) VALUES ";
-
-        // ksort($this->crawledUrls);
-        // foreach ($this->crawledUrls as $urls) {
-        //     foreach ($urls as $url) {
-        //         $sql .= '(' . $this->crawlId . ',';
-        //         $sql .= implode(",", $url);
-        //         $sql .= '), ';
-        //     }
-        // }
-        // $sql = trim($sql);
-        // $sql = trim($sql, ',');
-        // $sql = $db->prepare($sql);
-        // $sql->execute();
+        $total_count = 0;
+        foreach ($this->crawledUrls as $urls) {
+            $total_count += count($urls);
+        }
 
         $sql = $db->prepare("UPDATE crawls SET status = 'completed', url_count = :count WHERE crawls.id = :id;");
         $sql->bindParam(':id', $_POST['id']);
+        $sql->bindParam(':count', $total_count);
 
         $sql->execute();
     }
