@@ -14,6 +14,11 @@ if (!isset($_POST['id'])) {
     exit();
 }
 
+ini_set('memory_limit', '256M');
+ini_set('max_execution_time', 60 * 60 * 2);
+set_time_limit(60 * 60 * 2);
+ignore_user_abort(true);
+
 global $db;
 
 $sql = $db->prepare("SELECT url FROM crawls WHERE id=:id");
@@ -28,13 +33,6 @@ $sql = $db->prepare("UPDATE crawls SET status = 'being processed' WHERE crawls.i
 $sql->bindParam(':id', $_POST['id']);
 
 $sql->execute();
-
-$response = [
-    'message' => 'success',
-];
-
-header('Content-Type: application/json');
-echo json_encode($response);
 
 $crawlProfile = new CrawlInternalUrls($baseUrl);
 
