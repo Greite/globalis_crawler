@@ -20,12 +20,6 @@ cp config/env.sample.php config/env.php
 Database structure
 
 ```sql
--- --------------------------------------------------------
-
---
--- Structure de la table `crawls`
---
-
 CREATE TABLE `crawls` (
   `id` int(11) NOT NULL,
   `url` varchar(255) NOT NULL,
@@ -33,12 +27,6 @@ CREATE TABLE `crawls` (
   `url_count` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
--- Structure de la table `crawl_logs`
---
 
 CREATE TABLE `crawl_logs` (
   `id` int(11) NOT NULL,
@@ -50,41 +38,17 @@ CREATE TABLE `crawl_logs` (
   `crawled_at` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
---
--- Index pour les tables déchargées
---
-
---
--- Index pour la table `crawls`
---
 ALTER TABLE `crawls`
   ADD PRIMARY KEY (`id`);
 
---
--- Index pour la table `crawl_logs`
---
 ALTER TABLE `crawl_logs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `crawl_id` (`crawl_id`);
 
---
--- AUTO_INCREMENT pour les tables déchargées
---
-
---
--- AUTO_INCREMENT pour la table `crawls`
---
 ALTER TABLE `crawls`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
---
--- AUTO_INCREMENT pour la table `crawl_logs`
---
 ALTER TABLE `crawl_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 ```
