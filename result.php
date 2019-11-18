@@ -67,6 +67,37 @@ function getStatusColor($code)
         return 'text-danger';
     }
 }
+
+function getHumanDate($timestamp)
+{
+    $date = date('H:i:s', $timestamp);
+    $date = explode(':', $date);
+
+    $date_string = '';
+    if ((int)$date[0] > 0) {
+        if ((int)$date[0] > 1) {
+            $date_string .= $date[0] . ' hours ';
+        } else {
+            $date_string .= $date[0] . ' hour ';
+        }
+    }
+    if ((int)$date[1] > 0) {
+        if ((int)$date[1] > 1) {
+            $date_string .= $date[1] . ' minutes ';
+        } else {
+            $date_string .= $date[1] . ' minute ';
+        }
+    }
+    if ((int)$date[2] > 0) {
+        if ((int)$date[2] > 1) {
+            $date_string .= $date[2] . ' seconds ';
+        } else {
+            $date_string .= $date[2] . ' second ';
+        }
+    }
+
+    return $date_string;
+}
 ?>
 
 <div id="result" class="container">
@@ -85,7 +116,7 @@ function getStatusColor($code)
     <?php endif; ?>
 
     <?php if (isset($time_exec)) : ?>
-        <h4>Execution time : <?= $time_exec ?> seconds</h4>
+        <h4>Execution time : <?= getHumanDate($time_exec) ?> (<?= $time_exec ?>s)</h4>
     <?php endif; ?>
 
     <div class="text-right">
