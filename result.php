@@ -35,7 +35,7 @@ if (isset($_GET['orderby']) && isset($_GET['order'])) {
     $orderby = ' ORDER BY ' . $_GET['orderby'] . ' ' . $_GET['order'];
 }
 
-$sql = $db->prepare("SELECT status_code, reason, url, found_on, crawled_at FROM crawl_logs WHERE crawl_id=:id" . $filters . $orderby);
+$sql = $db->prepare("SELECT status_code, reason, url, found_on, redirect_to FROM crawl_logs WHERE crawl_id=:id" . $filters . $orderby);
 $sql->bindParam(':id', $_GET['id']);
 
 $sql->execute();
@@ -46,6 +46,16 @@ $sql->bindParam(':id', $_GET['id']);
 
 $sql->execute();
 $status_codes = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+if (isset($crawl['started_at']) && isset($crawl['finished_at'])) {
+    $started_at = new \DateTime($crawl['started_at']);
+    $finished_at = new \DateTime($crawl['finished_at']);
+
+    $started_at = $started_at->getTimestamp();
+    $finished_at = $finished_at->getTimestamp();
+
+    $time_exec = $finished_at - $started_at;
+}
 
 function getStatusColor($code)
 {
@@ -73,6 +83,11 @@ function getStatusColor($code)
     <?php if ($crawl['url_count'] !== null) : ?>
         <h4>Page crawled : <?= $crawl['url_count'] ?></h4>
     <?php endif; ?>
+
+    <?php if (isset($time_exec)) : ?>
+        <h4>Execution time : <?= $time_exec ?> seconds</h4>
+    <?php endif; ?>
+
     <div class="text-right">
         <a href="<?= WEB_HOME ?>/" class="btn btn-secondary"><i class="fas fa-home"></i></a>
         <a href="<?= WEB_HOME . '/result.php/?id=' . $_GET['id'] ?>" class="btn btn-secondary"><i class="fas fa-sync-alt"></i></a>
@@ -130,6 +145,20 @@ function getStatusColor($code)
                     <button type="submit" class="btn btn-link font-weight-bold">Found on <i class="fas fa-sort<?= isset($_GET['order']) && isset($_GET['orderby']) && $_GET['orderby'] === 'found_on' ? $_GET['order'] === 'ASC' ? '-up' : '-down' : null ?>"></i></button>
                 </form>
             </th>
+            <th scope="col">
+                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                    <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
+                    <?php foreach ($_GET as $key => $value) : ?>
+                        <?php if (strpos($key, 'status_') === false) {
+                            continue;
+                        }?>
+                        <input type="hidden" name="<?= $key ?>" value="<?= $value ?>"/>
+                    <?php endforeach; ?>
+                    <input type="hidden" name="orderby" value="redirect_to"/>
+                    <input type="hidden" name="order" value="<?= isset($_GET['order']) && $_GET['order'] === 'DESC' ? 'ASC' : 'DESC' ?>"/>
+                    <button type="submit" class="btn btn-link font-weight-bold">Redirect to <i class="fas fa-sort<?= isset($_GET['order']) && isset($_GET['orderby']) && $_GET['orderby'] === 'redirect_to' ? $_GET['order'] === 'ASC' ? '-up' : '-down' : null ?>"></i></button>
+                </form>
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -139,6 +168,7 @@ function getStatusColor($code)
                 <td><?= $data['reason'] ?></td>
                 <td><a href="<?= $data['url'] ?>" target="_blank"><?= $data['url'] ?></a></td>
                 <td><a href="<?= $data['found_on'] ?>" target="_blank"><?= $data['found_on'] ?></a></td>
+                <td><a href="<?= $data['redirect_to'] ?>" target="_blank"><?= $data['redirect_to'] ?></a></td>
             </tr>
         <?php endforeach; ?>
     </tbody>

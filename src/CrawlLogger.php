@@ -50,9 +50,12 @@ class CrawlLogger extends CrawlObserver
             $total_count += count($urls);
         }
 
-        $sql = $db->prepare("UPDATE crawls SET status = 'completed', url_count = :count WHERE crawls.id = :id;");
+        $now = new \DateTime();
+
+        $sql = $db->prepare("UPDATE crawls SET status = 'completed', url_count = :count, finished_at = :now WHERE crawls.id = :id;");
         $sql->bindParam(':id', $_POST['id']);
         $sql->bindParam(':count', $total_count);
+        $sql->bindParam(':now', $now->format('Y-m-d H:i:s'));
 
         $sql->execute();
     }
@@ -82,6 +85,14 @@ class CrawlLogger extends CrawlObserver
 
         $statusCode = $response->getStatusCode();
         $reason = $response->getReasonPhrase();
+
+        if ($statusCode === 301 || $statusCode === 302) {
+            $redirect_to = $response->getHeader('Location');
+
+            $redirect_length = count($redirect_to) - 1;
+            $redirect_to = $redirect_to[$redirect_length];
+        }
+
         $timestamp = date('Y-m-d H:i:s');
 
         $data = [
@@ -89,12 +100,13 @@ class CrawlLogger extends CrawlObserver
             'reason' => '"' . $reason . '"',
             'url' => '"' . (string)$url . '"',
             'found_on' => (string)$foundOnUrl ? '"' . (string)$foundOnUrl . '"' : 'null',
+            'redirect_to' => isset($redirect_to) ? '"' . (string)$redirect_to . '"' : 'null',
             'crawled_at' => '"' . $timestamp . '"',
         ];
 
         $this->crawledUrls[$statusCode][] = $data;
 
-        $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, crawled_at) VALUES ";
+        $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, redirect_to, crawled_at) VALUES ";
         $sql .= '(' . $this->crawlId . ',';
         $sql .= implode(",", $data);
         $sql .= ')';
@@ -122,12 +134,13 @@ class CrawlLogger extends CrawlObserver
             'reason' => '"' . $reason . '"',
             'url' => '"' . (string)$url . '"',
             'found_on' => (string)$foundOnUrl ? '"' . (string)$foundOnUrl . '"' : 'null',
+            'redirect_to' => isset($redirect_to) ? '"' . (string)$redirect_to . '"' : 'null',
             'crawled_at' => '"' . $timestamp . '"',
         ];
 
         $this->crawledUrls[$statusCode][] = $data;
 
-        $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, crawled_at) VALUES ";
+        $sql = "INSERT INTO crawl_logs (crawl_id, status_code, reason, url, found_on, redirect_to, crawled_at) VALUES ";
         $sql .= '(' . $this->crawlId . ',';
         $sql .= implode(",", $data);
         $sql .= ')';
