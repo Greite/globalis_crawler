@@ -76,23 +76,23 @@ function getHumanDate($timestamp)
     $date_string = '';
     if ((int)$date[0] > 0) {
         if ((int)$date[0] > 1) {
-            $date_string .= $date[0] . ' hours ';
+            $date_string .= ltrim($date[0], '0') . ' hours ';
         } else {
-            $date_string .= $date[0] . ' hour ';
+            $date_string .= ltrim($date[0], '0') . ' hour ';
         }
     }
     if ((int)$date[1] > 0) {
         if ((int)$date[1] > 1) {
-            $date_string .= $date[1] . ' minutes ';
+            $date_string .= ltrim($date[1], '0') . ' minutes ';
         } else {
-            $date_string .= $date[1] . ' minute ';
+            $date_string .= ltrim($date[1], '0') . ' minute ';
         }
     }
     if ((int)$date[2] > 0) {
         if ((int)$date[2] > 1) {
-            $date_string .= $date[2] . ' seconds ';
+            $date_string .= ltrim($date[2], '0') . ' seconds ';
         } else {
-            $date_string .= $date[2] . ' second ';
+            $date_string .= ltrim($date[2], '0') . ' second ';
         }
     }
 
