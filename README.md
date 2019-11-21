@@ -25,7 +25,9 @@ CREATE TABLE `crawls` (
   `url` varchar(255) NOT NULL,
   `status` varchar(255) NOT NULL,
   `url_count` int(11) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `started_at` datetime DEFAULT NULL,
+  `finished_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `crawl_logs` (
@@ -35,6 +37,7 @@ CREATE TABLE `crawl_logs` (
   `reason` varchar(255) NOT NULL,
   `url` text NOT NULL,
   `found_on` text,
+  `redirect_to` text,
   `crawled_at` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
