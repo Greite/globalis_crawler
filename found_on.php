@@ -6,11 +6,11 @@ if (!isset($_GET['id'])) {
     exit();
 }
 
-$sql = $db->prepare("SELECT * FROM crawls WHERE id=:id");
+$sql = $db->prepare("SELECT * FROM crawl_logs WHERE id=:id");
 $sql->bindParam(':id', $_GET['id']);
 
 $sql->execute();
-$crawl = $sql->fetch(PDO::FETCH_ASSOC);
+$crawl_log = $sql->fetch(PDO::FETCH_ASSOC);
 
 $filters = '';
 
@@ -35,27 +35,21 @@ if (isset($_GET['orderby']) && isset($_GET['order'])) {
     $orderby = ' ORDER BY ' . $_GET['orderby'] . ' ' . $_GET['order'];
 }
 
-$sql = $db->prepare("SELECT id, status_code, reason, url, found_on, redirect_to FROM crawl_logs WHERE crawl_id=:id" . $filters . $orderby);
-$sql->bindParam(':id', $_GET['id']);
+$sql = $db->prepare("SELECT status_code, reason, url, found_on, redirect_to FROM crawl_logs WHERE crawl_id=:id AND found_on=:found_on" . $filters . $orderby);
+$sql->bindParam(':id', $crawl_log['crawl_id']);
+$sql->bindParam(':found_on', $crawl_log['found_on']);
 
 $sql->execute();
 $datas = $sql->fetchAll(PDO::FETCH_ASSOC);
 
-$sql = $db->prepare("SELECT count(*) as nb, status_code FROM crawl_logs WHERE crawl_id=:id GROUP BY status_code");
-$sql->bindParam(':id', $_GET['id']);
+$sql = $db->prepare("SELECT count(*) as nb, status_code FROM crawl_logs WHERE crawl_id=:id AND found_on=:found_on GROUP BY status_code");
+$sql->bindParam(':id', $crawl_log['crawl_id']);
+$sql->bindParam(':found_on', $crawl_log['found_on']);
 
 $sql->execute();
 $status_codes = $sql->fetchAll(PDO::FETCH_ASSOC);
 
-if (isset($crawl['started_at']) && isset($crawl['finished_at'])) {
-    $started_at = new \DateTime($crawl['started_at']);
-    $finished_at = new \DateTime($crawl['finished_at']);
 
-    $started_at = $started_at->getTimestamp();
-    $finished_at = $finished_at->getTimestamp();
-
-    $time_exec = $finished_at - $started_at;
-}
 
 function getStatusColor($code)
 {
@@ -67,65 +61,18 @@ function getStatusColor($code)
         return 'text-danger';
     }
 }
-
-function getHumanDate($timestamp)
-{
-    $date = date('H:i:s', $timestamp);
-    $date = explode(':', $date);
-
-    $date_string = '';
-    if ((int)$date[0] > 0) {
-        if ((int)$date[0] > 1) {
-            $date_string .= ltrim($date[0], '0') . ' hours ';
-        } else {
-            $date_string .= ltrim($date[0], '0') . ' hour ';
-        }
-    }
-    if ((int)$date[1] > 0) {
-        if ((int)$date[1] > 1) {
-            $date_string .= ltrim($date[1], '0') . ' minutes ';
-        } else {
-            $date_string .= ltrim($date[1], '0') . ' minute ';
-        }
-    }
-    if ((int)$date[2] > 0) {
-        if ((int)$date[2] > 1) {
-            $date_string .= ltrim($date[2], '0') . ' seconds ';
-        } else {
-            $date_string .= ltrim($date[2], '0') . ' second ';
-        }
-    }
-
-    return $date_string;
-}
 ?>
 
-<div id="result" class="container">
-    <h1>Site crawled : </h1>
-    <h2><a href="<?= $crawl['url'] ?>" target="_blank"><?= $crawl['url'] ?></a></h2>
-    <h4 id="result_status" data-status="<?= $crawl['status'] ?>">
-        Status : <?= $crawl['status'] ?>
-        <?php if ($crawl['status'] !== 'completed') : ?>
-            <div class="spinner-border text-dark" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        <?php endif; ?>
-    </h4>
-    <?php if ($crawl['url_count'] !== null) : ?>
-        <h4>Page crawled : <?= $crawl['url_count'] ?></h4>
-    <?php endif; ?>
-
-    <?php if (isset($time_exec)) : ?>
-        <h4>Execution time : <?= getHumanDate($time_exec) ?> (<?= $time_exec ?>s)</h4>
-    <?php endif; ?>
-
+<div class="container">
+    <h1>All requests found on : </h1>
+    <h2><a href="<?= $crawl_log['found_on'] ?>"><?= $crawl_log['found_on'] ?></a></h2>
     <div class="text-right">
         <a href="<?= WEB_HOME ?>/" class="btn btn-secondary"><i class="fas fa-home"></i></a>
-        <a href="<?= WEB_HOME . '/result.php/?id=' . $_GET['id'] ?>" class="btn btn-secondary"><i class="fas fa-sync-alt"></i></a>
         <a href="<?= WEB_HOME ?>/list_crawl.php" class="btn btn-secondary">List crawls</a>
+        <a href="<?= WEB_HOME ?>/result.php?id=<?= $crawl_log['crawl_id'] ?>" class="btn btn-secondary">Back</a>
     </div>
     <br>
-    <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+    <form action="<?= WEB_HOME . '/found_on.php' ?>" method="get">
         <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
         <?php if (isset($_GET['orderby'])) : ?>
             <input type="hidden" name="orderby" value="<?= $_GET['orderby'] ?>" />
@@ -147,7 +94,7 @@ function getHumanDate($timestamp)
     <thead>
         <tr>
             <th scope="col">
-                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                <form action="<?= WEB_HOME . '/found_on.php' ?>" method="get">
                     <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
                     <?php foreach ($_GET as $key => $value) : ?>
                         <?php if (strpos($key, 'status_') === false) {
@@ -162,7 +109,7 @@ function getHumanDate($timestamp)
             </th>
             <th scope="col"><span class="btn font-weight-bold">Reason</span></th>
             <th scope="col">
-                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                <form action="<?= WEB_HOME . '/found_on.php' ?>" method="get">
                     <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
                     <?php foreach ($_GET as $key => $value) : ?>
                         <?php if (strpos($key, 'status_') === false) {
@@ -176,7 +123,7 @@ function getHumanDate($timestamp)
                 </form>
             </th>
             <th scope="col">
-                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                <form action="<?= WEB_HOME . '/found_on.php' ?>" method="get">
                     <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
                     <?php foreach ($_GET as $key => $value) : ?>
                         <?php if (strpos($key, 'status_') === false) {
@@ -190,7 +137,7 @@ function getHumanDate($timestamp)
                 </form>
             </th>
             <th scope="col">
-                <form action="<?= WEB_HOME . '/result.php' ?>" method="get">
+                <form action="<?= WEB_HOME . '/found_on.php' ?>" method="get">
                     <input type="hidden" name="id" value="<?= $_GET['id'] ?>" />
                     <?php foreach ($_GET as $key => $value) : ?>
                         <?php if (strpos($key, 'status_') === false) {
@@ -211,12 +158,7 @@ function getHumanDate($timestamp)
                 <th scope="row" class="<?= getStatusColor($data['status_code']) ?>"><?= $data['status_code'] ?></th>
                 <td><?= $data['reason'] ?></td>
                 <td><a href="<?= $data['url'] ?>" target="_blank"><?= $data['url'] ?></a></td>
-                <td>
-                    <a href="<?= $data['found_on'] ?>" target="_blank"><?= $data['found_on'] ?></a>
-                    <?php if ($data['found_on'] !== null) : ?>
-                        <a href="<?= WEB_HOME ?>/found_on.php?id=<?= $data['id'] ?>" class="ml-2"><i class="fas fa-filter"></i></a>
-                    <?php endif; ?>
-                    </td>
+                <td><a href="<?= $data['found_on'] ?>" target="_blank"><?= $data['found_on'] ?></a></td>
                 <td><a href="<?= $data['redirect_to'] ?>" target="_blank"><?= $data['redirect_to'] ?></a></td>
             </tr>
         <?php endforeach; ?>
