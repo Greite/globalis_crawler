@@ -19,8 +19,11 @@
 
             $.post('create_crawl.php', { crawled_site: crawl_url})
             .done(function (data) {
-                $.post('crawl.php', {id: data.id})
-                window.location.href = "./result.php/?id=" + data.id;
+                console.log(data.id);
+                $.post('crawl.php', {id: data.id}).done(function(){console.log('Run !')})
+                setTimeout(function () {
+                    window.location.href = "./result.php/?id=" + data.id;
+                }, 100)
             });
         });
     });
