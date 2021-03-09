@@ -70,7 +70,7 @@ function getStatusColor($code)
 
 function getHumanDate($timestamp)
 {
-    $date = date('H:i:s', $timestamp);
+    $date = gmdate('H:i:s', $timestamp);
     $date = explode(':', $date);
 
     $date_string = '';
