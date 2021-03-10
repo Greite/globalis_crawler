@@ -15,8 +15,8 @@ if (!isset($_POST['id'])) {
 }
 
 ini_set('memory_limit', '256M');
-ini_set('max_execution_time', 60 * 60 * 2);
-set_time_limit(60 * 60 * 2);
+ini_set('max_execution_time', APP_TIMEOUT);
+set_time_limit(APP_TIMEOUT);
 ignore_user_abort(true);
 
 global $db;
@@ -44,12 +44,18 @@ $crawlLogger = new CrawlLogger();
 $crawlLogger->setCrawlId($_POST['id']);
 
 $clientOptions = [
-    RequestOptions::TIMEOUT => 300,
+    RequestOptions::COOKIES => true,
+    RequestOptions::CONNECT_TIMEOUT => APP_TIMEOUT,
+    RequestOptions::TIMEOUT => APP_TIMEOUT,
     RequestOptions::VERIFY => 0,
     RequestOptions::ALLOW_REDIRECTS => false,
+    RequestOptions::HEADERS => [
+        'User-Agent' => Crawler::DEFAULT_USER_AGENT,
+    ],
 ];
-$crawler = Crawler::create()
-    ->setConcurrency(10)
+
+$crawler = Crawler::create($clientOptions)
+    ->setConcurrency(20)
     ->setCrawlObserver($crawlLogger)
     ->setCrawlProfile($crawlProfile);
 
