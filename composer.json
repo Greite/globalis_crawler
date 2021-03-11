@@ -1,8 +1,15 @@
 {
     "require": {
         "php": ">=7.3",
-        "spatie/http-status-check": "^3.1"
+        "greite/crawler": "dev-master"
     },
+
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Greite/crawler.git"
+        }
+    ],
 
     "autoload": {
         "psr-4": {

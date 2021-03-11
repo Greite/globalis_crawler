@@ -1,7 +1,7 @@
 <?php
 namespace GlobalisCrawler;
 
-use Spatie\Crawler\CrawlObserver;
+use Spatie\Crawler\CrawlObservers\CrawlObserver;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Exception\RequestException;

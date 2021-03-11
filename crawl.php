@@ -5,7 +5,7 @@ require 'config/env.php';
 
 use Spatie\Crawler\Crawler;
 use GuzzleHttp\RequestOptions;
-use Spatie\Crawler\CrawlInternalUrls;
+use Spatie\Crawler\CrawlProfiles\CrawlInternalUrls;
 
 use GlobalisCrawler\CrawlLogger;
 
@@ -54,13 +54,11 @@ $clientOptions = [
     ],
 ];
 
-$crawler = Crawler::create($clientOptions)
+Crawler::create($clientOptions)
     ->setConcurrency(20)
     ->setCrawlObserver($crawlLogger)
-    ->setCrawlProfile($crawlProfile);
-
-$crawler->ignoreRobots();
-
-$crawler->startCrawling($baseUrl);
+    ->setCrawlProfile($crawlProfile)
+    ->ignoreRobots()
+    ->startCrawling($baseUrl);
 
 exit();
